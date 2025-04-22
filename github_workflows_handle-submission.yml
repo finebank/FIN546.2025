@@ -1,0 +1,33 @@
+name: Handle Student Submission
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  process-submission:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.title, '[SUBMISSION]')
+    
+    permissions:
+      contents: write
+      issues: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Process submission
+        run: |
+          python3 .github/scripts/process_submission.py
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
