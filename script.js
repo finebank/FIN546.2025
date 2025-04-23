@@ -27,32 +27,39 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.disabled = true;
             submitBtn.textContent = 'Submitting...';
 
-            // Create issue body
-            const issueBody = `
-Full Name: ${formData.get('fullName')}
-Student ID: ${formData.get('studentId')}
-Group: ${formData.get('group')}
-YouTube Link: ${formData.get('videoLink')}
-PDF Filename: ${pdfFile.name}
-Submission Date: ${new Date().toISOString()}
-            `.trim();
+            // Create issue body with proper formatting
+            const issueBody = [
+                `## Student Submission Details`,
+                ``,
+                `- **Full Name:** ${formData.get('fullName')}`,
+                `- **Student ID:** ${formData.get('studentId')}`,
+                `- **Group:** ${formData.get('group')}`,
+                `- **YouTube Link:** ${formData.get('videoLink')}`,
+                `- **PDF Filename:** ${pdfFile.name}`,
+                `- **Submission Date:** ${new Date().toISOString()}`,
+                ``,
+                `### PDF Content`,
+                `_File will be processed by the workflow_`
+            ].join('\n');
 
-            // Create GitHub issue
+            // Create GitHub issue using the REST API
             const response = await fetch('https://api.github.com/repos/finebank/FIN546.2025/issues', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `token ${process.env.GITHUB_TOKEN}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Authorization': `Bearer ${window.GITHUB_TOKEN}`, // This needs to be set in your HTML
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    title: '[SUBMISSION] New Student Submission',
+                    title: `[SUBMISSION] Student Submission - ${formData.get('fullName')}`,
                     body: issueBody,
                     labels: ['submission']
                 })
             });
 
             if (!response.ok) {
-                throw new Error('Failed to submit form');
+                const errorData = await response.json();
+                throw new Error(`GitHub API Error: ${errorData.message}`);
             }
 
             // Show success message
@@ -61,7 +68,7 @@ Submission Date: ${new Date().toISOString()}
             // Reset form
             form.reset();
         } catch (error) {
-            alert('Error submitting form. Please try again.');
+            alert(`Error submitting form: ${error.message}`);
             console.error('Submission error:', error);
         } finally {
             // Re-enable submit button
