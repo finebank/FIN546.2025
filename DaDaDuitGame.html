@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DADUit Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        secondary: '#38B2AC',
+                        accent: '#F6AD55',
+                        dark: '#2D3748',
+                        light: '#F7FAFC',
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 2s infinite',
+                        'spin-slow': 'spin 3s linear infinite',
+                    }
+                }
+            },
+            darkMode: 'class',
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .dark body {
+            background-color: #181818;
+            color: #F7FAFC;
+        }
+        
+        .dice {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            transform-style: preserve-3d;
+            transition: transform 1s ease;
+        }
+        
+        .dice-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 10%;
+            border: 2px solid #fff;
+            background-color: #5D5CDE;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .dice-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #fff;
+            display: block;
+        }
+        
+        .dice-face:nth-child(1) {
+            transform: translateZ(40px);
+        }
+        
+        .dice-face:nth-child(2) {
+            transform: rotateX(180deg) translateZ(40px);
+        }
+        
+        .dice-face:nth-child(3) {
+            transform: rotateY(90deg) translateZ(40px);
+        }
+        
+        .dice-face:nth-child(4) {
+            transform: rotateY(-90deg) translateZ(40px);
+        }
+        
+        .dice-face:nth-child(5) {
+            transform: rotateX(90deg) translateZ(40px);
+        }
+        
+        .dice-face:nth-child(6) {
+            transform: rotateX(-90deg) translateZ(40px);
+        }
+        
+        .face-1 {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .face-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            padding: 12px;
+        }
+        
+        .face-2 .dice-dot:nth-child(2) {
+            align-self: flex-end;
+            justify-self: flex-end;
+        }
+        
+        .face-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            padding: 12px;
+        }
+        
+        .face-3 .dice-dot:nth-child(1) {
+            grid-column: 1;
+            grid-row: 1;
+        }
+        
+        .face-3 .dice-dot:nth-child(2) {
+            grid-column: 2;
+            grid-row: 2;
+        }
+        
+        .face-3 .dice-dot:nth-child(3) {
+            grid-column: 3;
+            grid-row: 3;
+        }
+        
+        .face-4 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            padding: 12px;
+            gap: 18px;
+        }
+        
+        .face-5 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            padding: 12px;
+            gap: 18px;
+        }
+        
+        .face-5 .dice-dot:nth-child(5) {
+            grid-column: 1/3;
+            grid-row: 1/3;
+            justify-self: center;
+            align-self: center;
+        }
+        
+        .face-6 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            padding: 12px;
+            gap: 8px;
+        }
+        
+        .board-cell {
+            width: 100%;
+            aspect-ratio: 1/1;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .dark .board-cell {
+            border-color: #4A5568;
+        }
+        
+        .board-cell.current {
+            background-color: rgba(93, 92, 222, 0.2);
+            border-color: #5D5CDE;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(93, 92, 222, 0.3);
+        }
+        
+        .dark .board-cell.current {
+            background-color: rgba(93, 92, 222, 0.3);
+        }
+        
+        .board-cell.visited {
+            background-color: rgba(93, 92, 222, 0.1);
+        }
+        
+        .dark .board-cell.visited {
+            background-color: rgba(93, 92, 222, 0.15);
+        }
+        
+        .player-pin {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #5D5CDE;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            transition: all 0.5s ease;
+        }
+        
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .popup-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .popup-content {
+            background-color: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 90%;
+            width: 450px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .dark .popup-content {
+            background-color: #2D3748;
+            color: #F7FAFC;
+        }
+        
+        .popup-overlay.active .popup-content {
+            transform: translateY(0);
+        }
+        
+        .popup-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        
+        .floating-badges {
+            position: fixed;
+            top: 65px;
+            right: 20px;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+        }
+        
+        .badge {
+            background-color: white;
+            color: #5D5CDE;
+            border-radius: 50px;
+            padding: 8px 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        
+        .dark .badge {
+            background-color: #2D3748;
+            color: #F7FAFC;
+        }
+        
+        .badge.active {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .badge-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #5D5CDE;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+        }
+        
+        .dice-container {
+            perspective: 1000px;
+        }
+        
+        .spinning {
+            animation: spinDice 1s linear;
+        }
+        
+        @keyframes spinDice {
+            0% { transform: rotateX(0) rotateY(0) rotateZ(0); }
+            100% { transform: rotateX(720deg) rotateY(720deg) rotateZ(720deg); }
+        }
+        
+        .logo-container {
+            animation: pulseLogo 3s infinite alternate;
+        }
+        
+        @keyframes pulseLogo {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+        
+        .board-area {
+            max-height: 80vh;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .board-area::-webkit-scrollbar {
+            width: 5px;
+        }
+        
+        .board-area::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .board-area::-webkit-scrollbar-thumb {
+            background: #5D5CDE;
+            border-radius: 10px;
+        }
+        
+        .dark .board-area::-webkit-scrollbar-track {
+            background: #2D3748;
+        }
+        
+        .dice-glow {
+            box-shadow: 0 0 15px 5px rgba(93, 92, 222, 0.6);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-300">
+    <div class="container mx-auto px-4 py-6">
+        <!-- Header -->
+        <header class="mb-6 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="logo-container w-12 h-12 md:w-16 md:h-16 rounded-full bg-primary flex items-center justify-center text-white text-xl md:text-2xl font-bold">
+                    <div class="dice-mini relative w-10 h-10 md:w-12 md:h-12">
+                        <div class="absolute inset-0 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">🎲</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">DADUit Game</h1>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Financial Education Game</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="bg-primary text-white px-3 py-1 rounded-full text-sm font-medium">
+                    Goal: RM10,000 by Day 30
+                </div>
+            </div>
+        </header>
+        
+        <!-- Game Container -->
+        <div class="flex flex-col md:flex-row gap-6">
+            <!-- Left Side: Player Stats & Dice -->
+            <div class="md:w-1/3 flex flex-col gap-6">
+                <!-- Player Stats -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md">
+                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Player Stats</h2>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 dark:text-gray-400">Balance:</span>
+                            <span class="text-xl font-bold text-green-600 dark:text-green-400" id="player-money">RM 5,000</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 dark:text-gray-400">Day:</span>
+                            <span class="text-xl font-bold text-primary" id="current-day">1</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 dark:text-gray-400">Savings:</span>
+                            <span class="text-lg font-bold text-blue-600 dark:text-blue-400" id="savings-amount">RM 0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 dark:text-gray-400">Debt:</span>
+                            <span class="text-lg font-bold text-red-600 dark:text-red-400" id="debt-amount">RM 0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 dark:text-gray-400">Happiness:</span>
+                            <div class="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-4">
+                                <div id="happiness-bar" class="bg-yellow-400 h-4 rounded-full" style="width: 80%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dice Container -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md flex flex-col items-center">
+                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Roll the Dice</h2>
+                    <div class="dice-container my-4" id="dice-container">
+                        <div class="dice" id="dice">
+                            <div class="dice-face face-1">
+                                <span class="dice-dot"></span>
+                            </div>
+                            <div class="dice-face face-2">
+                                <span class="dice-dot"></span>
+                                <span class="dice-dot"></span>
+                            </div>
+                            <div class="dice-face face-3">
+                                <span class="dice-dot"></span>
+                                <span class="dice-dot"></span>
+                                <span class="dice-dot"></span>
+                            </div>
+                            <div class="dice-face face-4">
+                                <span class="dice-dot"></span>
+                                <span class="dice-dot"></span>
+                                <span class="dice-dot"></span>
+                                <span class="dice-dot"></span>
+                            </div>
+                            <div class="dice-face face-5">
+                                <span class="dice-dot"></span>
+                                <span class="dice-dot"></span>
+                                <span class="dice-dot"></span>
+                                <span class="dice-dot"></span>
+                                <span class="dice-dot"></span>
+                            </div>
+                            <div class="dice-face face-6">
+                                <span class="dice-dot"></span>
+                                <span class="dice-dot"></span>
+                                <span class="dice-dot"></span>
+                                <span class="dice-dot"></span>
+                                <span class="dice-dot"></span>
+                                <span class="dice-dot"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="roll-button" class="mt-4 bg-primary hover:bg-primary/90 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition transform hover:scale-105 active:scale-95">
+                        Roll Dice
+                    </button>
+                </div>
+                
+                <!-- Achievements -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md">
+                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Achievements</h2>
+                    <div class="grid grid-cols-3 gap-3" id="achievements-container">
+                        <!-- Achievements will be added here dynamically -->
+                        <div class="achievement-placeholder h-16 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                            <span class="text-gray-400 dark:text-gray-500 text-2xl">?</span>
+                        </div>
+                        <div class="achievement-placeholder h-16 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                            <span class="text-gray-400 dark:text-gray-500 text-2xl">?</span>
+                        </div>
+                        <div class="achievement-placeholder h-16 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                            <span class="text-gray-400 dark:text-gray-500 text-2xl">?</span>
+                        </div>
+                        <div class="achievement-placeholder h-16 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                            <span class="text-gray-400 dark:text-gray-500 text-2xl">?</span>
+                        </div>
+                        <div class="achievement-placeholder h-16 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                            <span class="text-gray-400 dark:text-gray-500 text-2xl">?</span>
+                        </div>
+                        <div class="achievement-placeholder h-16 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                            <span class="text-gray-400 dark:text-gray-500 text-2xl">?</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Side: Game Board -->
+            <div class="md:w-2/3">
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md">
+                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Financial Journey</h2>
+                    <div class="board-area">
+                        <div class="grid grid-cols-6 md:grid-cols-6 gap-2" id="game-board">
+                            <!-- Calendar cells will be generated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Popup Overlay -->
+    <div class="popup-overlay" id="popup-overlay">
+        <div class="popup-content">
+            <div class="popup-close" id="popup-close">×</div>
+            <div id="popup-content-inner">
+                <!-- Popup content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Floating Badges Container -->
+    <div class="floating-badges" id="floating-badges">
+        <!-- Badges will be dynamically added here -->
+    </div>
+
+    <script>
+        // Check for dark mode preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+        
+        // Game state
+        const gameState = {
+            money: 5000,
+            day: 1,
+            savings: 0,
+            debt: 0,
+            happiness: 80,
+            achievements: [],
+            isRolling: false,
+            isGameOver: false
+        };
+        
+        // Game events - financial challenges and decisions
+        const gameEvents = [
+            {
+                type: "expense",
+                icon: "🛒",
+                title: "Grocery Shopping",
+                description: "You need to buy groceries for the week.",
+                options: [
+                    { text: "Buy premium groceries", amount: -150, happiness: 10 },
+                    { text: "Buy regular groceries", amount: -100, happiness: 5 },
+                    { text: "Buy budget groceries", amount: -60, happiness: 0 }
+                ]
+            },
+            {
+                type: "expense",
+                icon: "🎭",
+                title: "K-Pop Concert Tickets",
+                description: "Your favorite K-Pop group is coming to town!",
+                options: [
+                    { text: "Buy VIP tickets", amount: -500, happiness: 20 },
+                    { text: "Buy regular tickets", amount: -200, happiness: 15 },
+                    { text: "Skip the concert", amount: 0, happiness: -10 }
+                ]
+            },
+            {
+                type: "expense",
+                icon: "📱",
+                title: "New Smartphone",
+                description: "Your phone is getting old. Do you want to upgrade?",
+                options: [
+                    { text: "Buy the latest flagship model", amount: -2500, happiness: 15 },
+                    { text: "Buy a mid-range model", amount: -1200, happiness: 10 },
+                    { text: "Keep using your old phone", amount: 0, happiness: -5 }
+                ]
+            },
+            {
+                type: "expense",
+                icon: "🍽️",
+                title: "Dining Out",
+                description: "Your friends invite you to dinner at a nice restaurant.",
+                options: [
+                    { text: "Go and order whatever you want", amount: -120, happiness: 10 },
+                    { text: "Go but stick to a budget", amount: -70, happiness: 5 },
+                    { text: "Decline the invitation", amount: 0, happiness: -5 }
+                ]
+            },
+            {
+                type: "expense",
+                icon: "👕",
+                title: "Shopping Spree",
+                description: "There's a big sale at your favorite clothing store!",
+                options: [
+                    { text: "Buy several new outfits", amount: -350, happiness: 15 },
+                    { text: "Buy just one new item", amount: -100, happiness: 8 },
+                    { text: "Skip the sale", amount: 0, happiness: -3 }
+                ]
+            },
+            {
+                type: "income",
+                icon: "💼",
+                title: "Part-Time Job Offer",
+                description: "You've been offered a weekend part-time job.",
+                options: [
+                    { text: "Accept the job", amount: 500, happiness: -5 },
+                    { text: "Negotiate for higher pay", amount: 600, happiness: -8, success: 0.7 },
+                    { text: "Decline the offer", amount: 0, happiness: 5 }
+                ]
+            },
+            {
+                type: "income",
+                icon: "🎁",
+                title: "Birthday Gift",
+                description: "It's your birthday and you received money gifts!",
+                options: [
+                    { text: "Spend it all on something fun", amount: 200, happiness: 15 },
+                    { text: "Save half, spend half", amount: 200, savings: 100, happiness: 10 },
+                    { text: "Save it all", amount: 0, savings: 200, happiness: 5 }
+                ]
+            },
+            {
+                type: "expense",
+                icon: "🏠",
+                title: "Rent Due",
+                description: "Your monthly rent is due.",
+                options: [
+                    { text: "Pay from your savings", amount: 0, savings: -800, happiness: 0 },
+                    { text: "Pay from your current balance", amount: -800, happiness: 0 },
+                    { text: "Take a loan to pay", amount: 0, debt: 850, happiness: -5 }
+                ]
+            },
+            {
+                type: "expense",
+                icon: "🚗",
+                title: "Car Trouble",
+                description: "Your car needs urgent repairs.",
+                options: [
+                    { text: "Fix everything", amount: -600, happiness: 5 },
+                    { text: "Fix only critical issues", amount: -300, happiness: 0 },
+                    { text: "Ignore and hope for the best", amount: 0, happiness: -10, risk: { type: "expense", chance: 0.7, amount: -1000 } }
+                ]
+            },
+            {
+                type: "investment",
+                icon: "📈",
+                title: "Investment Opportunity",
+                description: "A friend suggests investing in a startup.",
+                options: [
+                    { text: "Invest a large amount", amount: -1000, risk: { type: "multiplier", chance: 0.4, multiplier: 3 } },
+                    { text: "Invest a small amount", amount: -300, risk: { type: "multiplier", chance: 0.4, multiplier: 3 } },
+                    { text: "Decline to invest", amount: 0, happiness: -2 }
+                ]
+            },
+            {
+                type: "income",
+                icon: "🏆",
+                title: "Competition Prize",
+                description: "You won second place in a campus competition!",
+                options: [
+                    { text: "Take the cash prize", amount: 400, happiness: 10 },
+                    { text: "Take the gift voucher", amount: 0, happiness: 12, voucher: { value: 450, type: "shopping" } },
+                    { text: "Donate the prize to charity", amount: 0, happiness: 15 }
+                ]
+            },
+            {
+                type: "expense",
+                icon: "📚",
+                title: "Textbooks Needed",
+                description: "You need to buy textbooks for this semester.",
+                options: [
+                    { text: "Buy new textbooks", amount: -450, happiness: 5 },
+                    { text: "Buy used textbooks", amount: -200, happiness: 2 },
+                    { text: "Borrow from the library", amount: 0, happiness: -3 }
+                ]
+            },
+            {
+                type: "expense",
+                icon: "🎮",
+                title: "New Video Game",
+                description: "A game you've been waiting for just released!",
+                options: [
+                    { text: "Buy the deluxe edition", amount: -250, happiness: 15 },
+                    { text: "Buy the standard edition", amount: -150, happiness: 10 },
+                    { text: "Wait for a sale", amount: 0, happiness: -5 }
+                ]
+            },
+            {
+                type: "expense",
+                icon: "☕",
+                title: "Coffee Habit",
+                description: "You buy coffee every morning. Is it worth it?",
+                options: [
+                    { text: "Continue buying premium coffee", amount: -120, happiness: 8 },
+                    { text: "Switch to regular coffee", amount: -70, happiness: 5 },
+                    { text: "Make coffee at home", amount: -20, happiness: 2 }
+                ]
+            },
+            {
+                type: "special",
+                icon: "🏦",
+                title: "Bank Promotion",
+                description: "Your bank is offering a special promotion on savings accounts.",
+                options: [
+                    { text: "Open a high-interest savings account", amount: -500, savings: 500, happiness: 5 },
+                    { text: "Open a regular savings account", amount: -200, savings: 200, happiness: 3 },
+                    { text: "Ignore the promotion", amount: 0, happiness: 0 }
+                ]
+            },
+            {
+                type: "expense",
+                icon: "🎓",
+                title: "Course Registration",
+                description: "You need to register for an extra course.",
+                options: [
+                    { text: "Register for the premium workshop", amount: -350, happiness: 10 },
+                    { text: "Register for the standard course", amount: -200, happiness: 5 },
+                    { text: "Skip the extra course", amount: 0, happiness: -5 }
+                ]
+            },
+            {
+                type: "income",
+                icon: "💻",
+                title: "Freelance Opportunity",
+                description: "Someone wants to hire you for a freelance project.",
+                options: [
+                    { text: "Accept and work overtime", amount: 800, happiness: -8 },
+                    { text: "Accept but negotiate for more time", amount: 600, happiness: -3 },
+                    { text: "Decline the project", amount: 0, happiness: 5 }
+                ]
+            },
+            {
+                type: "expense",
+                icon: "🎒",
+                title: "New Backpack",
+                description: "Your backpack is worn out and needs replacement.",
+                options: [
+                    { text: "Buy a premium brand backpack", amount: -250, happiness: 10 },
+                    { text: "Buy a mid-range backpack", amount: -120, happiness: 5 },
+                    { text: "Buy a budget backpack", amount: -50, happiness: 0 }
+                ]
+            },
+            {
+                type: "expense",
+                icon: "🏥",
+                title: "Health Check-up",
+                description: "It's time for your annual health check-up.",
+                options: [
+                    { text: "Get a comprehensive check-up", amount: -300, happiness: 8 },
+                    { text: "Get a basic check-up", amount: -150, happiness: 5 },
+                    { text: "Skip the check-up", amount: 0, happiness: -10, risk: { type: "expense", chance: 0.3, amount: -500 } }
+                ]
+            },
+            {
+                type: "expense",
+                icon: "✈️",
+                title: "Weekend Getaway",
+                description: "Your friends are planning a weekend trip.",
+                options: [
+                    { text: "Join and fully participate", amount: -600, happiness: 20 },
+                    { text: "Join but stick to a budget", amount: -300, happiness: 15 },
+                    { text: "Skip the trip", amount: 0, happiness: -10 }
+                ]
+            }
+        ];
+        
+        // Achievements data
+        const achievements = [
+            { id: "saver", icon: "💰", title: "Smart Saver", description: "Save RM1,000 in your savings account", condition: () => gameState.savings >= 1000 },
+            { id: "moneyMaker", icon: "💵", title: "Money Maker", description: "Reach a balance of RM7,500", condition: () => gameState.money >= 7500 },
+            { id: "richKid", icon: "👑", title: "Finance Wizard", description: "Reach a balance of RM10,000", condition: () => gameState.money >= 10000 },
+            { id: "debtFree", icon: "🔓", title: "Debt Free", description: "Pay off all your debt", condition: () => gameState.debt >= 1000 && gameState.debt === 0 },
+            { id: "happy", icon: "😊", title: "Happy Camper", description: "Maintain 90% happiness for 5 consecutive days", condition: () => gameState.happiness >= 90 },
+            { id: "investor", icon: "📊", title: "Savvy Investor", description: "Make a successful investment", condition: () => false } // Special achievement triggered by investment success
+        ];
+        
+        // Warning thresholds
+        const warnings = [
+            { id: "lowMoney", icon: "⚠️", title: "Low Balance Warning", description: "Your balance is getting dangerously low!", condition: () => gameState.money < 500 },
+            { id: "highDebt", icon: "⚠️", title: "High Debt Warning", description: "Your debt is accumulating!", condition: () => gameState.debt > 2000 },
+            { id: "lowHappiness", icon: "⚠️", title: "Low Happiness Warning", description: "Your happiness is declining!", condition: () => gameState.happiness < 30 },
+            { id: "lowSavings", icon: "⚠️", title: "Low Savings Warning", description: "You should build your emergency fund!", condition: () => gameState.day > 10 && gameState.savings < 500 }
+        ];
+        
+        // DOM elements
+        const gameBoard = document.getElementById('game-board');
+        const diceContainer = document.getElementById('dice-container');
+        const dice = document.getElementById('dice');
+        const rollButton = document.getElementById('roll-button');
+        const popupOverlay = document.getElementById('popup-overlay');
+        const popupClose = document.getElementById('popup-close');
+        const popupContentInner = document.getElementById('popup-content-inner');
+        const floatingBadges = document.getElementById('floating-badges');
+        const playerMoneyElement = document.getElementById('player-money');
+        const currentDayElement = document.getElementById('current-day');
+        const savingsAmountElement = document.getElementById('savings-amount');
+        const debtAmountElement = document.getElementById('debt-amount');
+        const happinessBarElement = document.getElementById('happiness-bar');
+        const achievementsContainer = document.getElementById('achievements-container');
+        
+        // Initialize the game board
+        function initializeBoard() {
+            gameBoard.innerHTML = '';
+            // Create 30 day cells
+            for (let i = 1; i <= 30; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'board-cell';
+                cell.id = `day-${i}`;
+                cell.innerHTML = `
+                    <div class="font-bold text-gray-800 dark:text-white">Day ${i}</div>
+                `;
+                
+                gameBoard.appendChild(cell);
+                
+                // Add player pin to day 1
+                if (i === 1) {
+                    cell.classList.add('current');
+                    const pin = document.createElement('div');
+                    pin.className = 'player-pin';
+                    pin.id = 'player-pin';
+                    pin.innerHTML = '👤';
+                    cell.appendChild(pin);
+                }
+            }
+        }
+        
+        // Update player stats in UI
+        function updateStats() {
+            playerMoneyElement.textContent = `RM ${gameState.money}`;
+            currentDayElement.textContent = gameState.day;
+            savingsAmountElement.textContent = `RM ${gameState.savings}`;
+            debtAmountElement.textContent = `RM ${gameState.debt}`;
+            happinessBarElement.style.width = `${gameState.happiness}%`;
+            
+            // Update happiness bar color based on value
+            if (gameState.happiness >= 70) {
+                happinessBarElement.className = 'bg-green-500 h-4 rounded-full';
+            } else if (gameState.happiness >= 40) {
+                happinessBarElement.className = 'bg-yellow-400 h-4 rounded-full';
+            } else {
+                happinessBarElement.className = 'bg-red-500 h-4 rounded-full';
+            }
+        }
+        
+        // Roll the dice
+        function rollDice() {
+            if (gameState.isRolling || gameState.isGameOver) return;
+            
+            gameState.isRolling = true;
+            dice.classList.add('spinning');
+            rollButton.disabled = true;
+            rollButton.classList.add('opacity-50');
+            
+            setTimeout(() => {
+                const roll = Math.floor(Math.random() * 6) + 1;
+                dice.classList.remove('spinning');
+                
+                // Set the dice to show the rolled number
+                const rotations = {
+                    1: 'rotateX(0deg) rotateY(0deg)',
+                    2: 'rotateX(180deg) rotateY(0deg)',
+                    3: 'rotateX(0deg) rotateY(-90deg)',
+                    4: 'rotateX(0deg) rotateY(90deg)',
+                    5: 'rotateX(-90deg) rotateY(0deg)',
+                    6: 'rotateX(90deg) rotateY(0deg)'
+                };
+                
+                dice.style.transform = rotations[roll];
+                
+                setTimeout(() => {
+                    movePlayer(roll);
+                }, 500);
+            }, 1000);
+        }
+        
+        // Move player on the board
+        function movePlayer(spaces) {
+            let targetDay = gameState.day + spaces;
+            if (targetDay > 30) targetDay = 30;
+            
+            // Animate player movement
+            animatePlayerMovement(gameState.day, targetDay, () => {
+                gameState.day = targetDay;
+                updateStats();
+                
+                // Check if the game is over
+                if (gameState.day >= 30) {
+                    setTimeout(() => {
+                        endGame();
+                    }, 1000);
+                    return;
+                }
+                
+                // Trigger a random event for this day
+                triggerEvent();
+                
+                // Check warnings
+                checkWarnings();
+                
+                // Check achievements
+                checkAchievements();
+                
+                // Enable roll button again
+                gameState.isRolling = false;
+                rollButton.disabled = false;
+                rollButton.classList.remove('opacity-50');
+            });
+        }
+        
+        // Animate player movement across cells
+        function animatePlayerMovement(fromDay, toDay, callback) {
+            const pin = document.getElementById('player-pin');
+            let currentCell = document.getElementById(`day-${fromDay}`);
+            
+            // Remove current class from current cell
+            currentCell.classList.remove('current');
+            // Add visited class
+            currentCell.classList.add('visited');
+            
+            let day = fromDay;
+            const moveNextStep = () => {
+                day++;
+                if (day <= toDay) {
+                    // Get next cell
+                    const nextCell = document.getElementById(`day-${day}`);
+                    
+                    // Get position of the next cell
+                    const nextCellRect = nextCell.getBoundingClientRect();
+                    
+                    // Mark as current
+                    nextCell.classList.add('current');
+                    
+                    // Move pin to next cell
+                    nextCell.appendChild(pin);
+                    
+                    // Scroll board if needed to keep the current day in view
+                    const boardArea = document.querySelector('.board-area');
+                    boardArea.scrollTop = Math.max(0, nextCellRect.top - boardArea.getBoundingClientRect().top - 100);
+                    
+                    // Continue animation
+                    setTimeout(moveNextStep, 300);
+                } else {
+                    // Animation complete
+                    if (callback) callback();
+                }
+            };
+            
+            // Start animation
+            setTimeout(moveNextStep, 300);
+        }
+        
+        // Trigger a financial event
+        function triggerEvent() {
+            const randomIndex = Math.floor(Math.random() * gameEvents.length);
+            const event = gameEvents[randomIndex];
+            
+            // Show event popup
+            showEventPopup(event);
+        }
+        
+        // Show event popup
+        function showEventPopup(event) {
+            popupContentInner.innerHTML = `
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl mr-3">
+                        ${event.icon}
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-white">${event.title}</h3>
+                        <p class="text-gray-600 dark:text-gray-400">Day ${gameState.day}</p>
+                    </div>
+                </div>
+                <p class="mb-6 text-gray-700 dark:text-gray-300">${event.description}</p>
+                <div class="space-y-3">
+                    ${event.options.map((option, index) => {
+                        // Format option description
+                        let description = '';
+                        
+                        if (option.amount !== 0) {
+                            description += option.amount > 0 ? `+RM${option.amount}` : `-RM${Math.abs(option.amount)}`;
+                        }
+                        
+                        if (option.savings) {
+                            description += option.savings > 0 ? ` | Savings +RM${option.savings}` : ` | Savings -RM${Math.abs(option.savings)}`;
+                        }
+                        
+                        if (option.debt) {
+                            description += ` | Debt +RM${option.debt}`;
+                        }
+                        
+                        if (option.happiness) {
+                            description += option.happiness > 0 ? ` | Happiness +${option.happiness}` : ` | Happiness ${option.happiness}`;
+                        }
+                        
+                        if (option.risk) {
+                            description += ` | Risk: ${Math.round(option.risk.chance * 100)}%`;
+                        }
+                        
+                        return `
+                            <button class="option-button w-full text-left p-3 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 transition" data-index="${index}">
+                                <div class="font-medium text-gray-800 dark:text-white">${option.text}</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">${description}</div>
+                            </button>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+            
+            // Add event listeners to option buttons
+            const optionButtons = popupContentInner.querySelectorAll('.option-button');
+            optionButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const optionIndex = parseInt(button.dataset.index);
+                    handleEventOption(event, event.options[optionIndex]);
+                    closePopup();
+                });
+            });
+            
+            // Show popup
+            popupOverlay.classList.add('active');
+        }
+        
+        // Handle event option selection
+        function handleEventOption(event, option) {
+            // Apply immediate effects
+            gameState.money += option.amount || 0;
+            gameState.savings += option.savings || 0;
+            gameState.debt += option.debt || 0;
+            gameState.happiness += option.happiness || 0;
+            
+            // Clamp happiness between 0 and 100
+            gameState.happiness = Math.max(0, Math.min(100, gameState.happiness));
+            
+            // Handle risk-based outcomes
+            if (option.risk) {
+                const roll = Math.random();
+                if (roll < option.risk.chance) {
+                    // Risk event happened
+                    if (option.risk.type === 'expense') {
+                        gameState.money += option.risk.amount;
+                        showFloatingBadge('🎲', `Risk: ${option.risk.amount > 0 ? '+' : ''}RM${option.risk.amount}`);
+                    } else if (option.risk.type === 'multiplier') {
+                        // Investment paid off
+                        const gain = Math.abs(option.amount) * (option.risk.multiplier - 1);
+                        gameState.money += gain;
+                        showFloatingBadge('💰', `Investment Success: +RM${gain}`);
+                        
+                        // Trigger investment achievement
+                        unlockAchievement('investor');
+                    }
+                }
+            }
+            
+            // Apply vouchers if present
+            if (option.voucher) {
+                showFloatingBadge('🎫', `Received ${option.voucher.type} voucher worth RM${option.voucher.value}`);
+            }
+            
+            // Check if player is bankrupt
+            if (gameState.money < 0) {
+                gameState.isGameOver = true;
+                setTimeout(() => {
+                    showGameOverScreen('bankruptcy');
+                }, 1000);
+            }
+            
+            // Update UI
+            updateStats();
+        }
+        
+        // Close popup
+        function closePopup() {
+            popupOverlay.classList.remove('active');
+        }
+        
+        // Show floating badge
+        function showFloatingBadge(icon, text) {
+            const badge = document.createElement('div');
+            badge.className = 'badge';
+            badge.innerHTML = `
+                <div class="badge-icon">${icon}</div>
+                <span>${text}</span>
+            `;
+            
+            floatingBadges.appendChild(badge);
+            
+            // Animate in
+            setTimeout(() => {
+                badge.classList.add('active');
+            }, 10);
+            
+            // Animate out and remove
+            setTimeout(() => {
+                badge.classList.remove('active');
+                setTimeout(() => {
+                    badge.remove();
+                }, 500);
+            }, 3000);
+        }
+        
+        // Check warnings
+        function checkWarnings() {
+            warnings.forEach(warning => {
+                if (warning.condition()) {
+                    showFloatingBadge(warning.icon, warning.title);
+                }
+            });
+        }
+        
+        // Check achievements
+        function checkAchievements() {
+            achievements.forEach(achievement => {
+                // Skip already unlocked achievements
+                if (gameState.achievements.includes(achievement.id)) return;
+                
+                // Check if condition is met
+                if (achievement.condition()) {
+                    unlockAchievement(achievement.id);
+                }
+            });
+        }
+        
+        // Unlock an achievement
+        function unlockAchievement(achievementId) {
+            // Find the achievement
+            const achievement = achievements.find(a => a.id === achievementId);
+            if (!achievement) return;
+            
+            // Add to unlocked achievements
+            gameState.achievements.push(achievementId);
+            
+            // Show achievement badge
+            showFloatingBadge('🏆', `Achievement: ${achievement.title}`);
+            
+            // Update achievements display
+            updateAchievementsDisplay();
+        }
+        
+        // Update achievements display
+        function updateAchievementsDisplay() {
+            // Get all achievement placeholders
+            const placeholders = achievementsContainer.querySelectorAll('.achievement-placeholder');
+            
+            // Update each unlocked achievement
+            gameState.achievements.forEach((achievementId, index) => {
+                if (index < placeholders.length) {
+                    const achievement = achievements.find(a => a.id === achievementId);
+                    if (achievement) {
+                        placeholders[index].innerHTML = `
+                            <div class="flex flex-col items-center justify-center h-full">
+                                <span class="text-2xl">${achievement.icon}</span>
+                                <span class="text-xs text-center mt-1 text-gray-700 dark:text-gray-300">${achievement.title}</span>
+                            </div>
+                        `;
+                        placeholders[index].classList.remove('bg-gray-100', 'dark:bg-gray-700');
+                        placeholders[index].classList.add('bg-primary/10');
+                    }
+                }
+            });
+        }
+        
+        // End game
+        function endGame() {
+            gameState.isGameOver = true;
+            
+            // Check win condition
+            const hasWon = gameState.money >= 10000;
+            
+            // Show game over screen
+            showGameOverScreen(hasWon ? 'victory' : 'timeUp');
+        }
+        
+        // Show game over screen
+        function showGameOverScreen(reason) {
+            let title, description, icon;
+            
+            switch (reason) {
+                case 'victory':
+                    title = 'Congratulations! 🎉';
+                    description = `You've reached your goal of RM10,000 by day ${gameState.day}! You've proven yourself to be financially savvy and responsible.`;
+                    icon = '🏆';
+                    break;
+                case 'timeUp':
+                    title = 'Time\'s Up! ⏰';
+                    description = `You've reached day 30 with RM${gameState.money}. You were aiming for RM10,000, but your financial journey has taught you valuable lessons.`;
+                    icon = '📊';
+                    break;
+                case 'bankruptcy':
+                    title = 'Bankruptcy! 💸';
+                    description = 'Unfortunately, your finances have gone negative. You\'re bankrupt! Remember the lessons learned and try again with better financial decisions.';
+                    icon = '📉';
+                    break;
+            }
+            
+            popupContentInner.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="text-5xl mb-4">${icon}</div>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-3">${title}</h2>
+                    <p class="text-gray-600 dark:text-gray-400 mb-6">${description}</p>
+                    
+                    <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 mb-6">
+                        <h3 class="font-semibold text-gray-800 dark:text-white mb-2">Final Stats</h3>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div class="text-left">Money:</div>
+                            <div class="text-right font-medium">RM${gameState.money}</div>
+                            <div class="text-left">Savings:</div>
+                            <div class="text-right font-medium">RM${gameState.savings}</div>
+                            <div class="text-left">Debt:</div>
+                            <div class="text-right font-medium">RM${gameState.debt}</div>
+                            <div class="text-left">Happiness:</div>
+                            <div class="text-right font-medium">${gameState.happiness}%</div>
+                            <div class="text-left">Days Played:</div>
+                            <div class="text-right font-medium">${gameState.day}</div>
+                            <div class="text-left">Achievements:</div>
+                            <div class="text-right font-medium">${gameState.achievements.length}</div>
+                        </div>
+                    </div>
+                    
+                    <button id="restart-button" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition">
+                        Play Again
+                    </button>
+                </div>
+            `;
+            
+            // Add event listener to restart button
+            const restartButton = document.getElementById('restart-button');
+            restartButton.addEventListener('click', () => {
+                resetGame();
+                closePopup();
+            });
+            
+            // Show popup
+            popupOverlay.classList.add('active');
+        }
+        
+        // Reset game
+        function resetGame() {
+            // Reset game state
+            gameState.money = 5000;
+            gameState.day = 1;
+            gameState.savings = 0;
+            gameState.debt = 0;
+            gameState.happiness = 80;
+            gameState.achievements = [];
+            gameState.isRolling = false;
+            gameState.isGameOver = false;
+            
+            // Reset UI
+            initializeBoard();
+            updateStats();
+            updateAchievementsDisplay();
+        }
+        
+        // Initialize game
+        function initGame() {
+            initializeBoard();
+            updateStats();
+            
+            // Add event listeners
+            rollButton.addEventListener('click', rollDice);
+            popupClose.addEventListener('click', closePopup);
+            
+            // Add dice hover effect
+            diceContainer.addEventListener('mouseenter', () => {
+                dice.classList.add('dice-glow');
+            });
+            
+            diceContainer.addEventListener('mouseleave', () => {
+                dice.classList.remove('dice-glow');
+            });
+        }
+        
+        // Start the game
+        initGame();
+    </script>
+</body>
+</html>
